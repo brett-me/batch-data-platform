@@ -21,7 +21,7 @@ reset:
 	@echo "rest target placeholder"
 
 psql:
-	@echo "psql target placeholder"
+	psql -h localhost -p 5432 -U postgres -d postgres
 
 ddl:
 	@echo "ddl target placeholder"
