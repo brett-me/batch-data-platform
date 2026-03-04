@@ -24,7 +24,7 @@ psql:
 	psql -h localhost -p 5432 -U postgres -d postgres
 
 ddl:
-	@echo "ddl target placeholder"
+	psql -h localhost -p 5432 -U postgres -d postgres -f sql/ddl/001_create_core_tables.sql
 
 seed:
 	@echo "seed target placeholder"
