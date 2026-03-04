@@ -1,4 +1,4 @@
-.PHONY: help up down reset psql ddl seed checks test
+.PHONY: help up down reset status psql ddl seed checks test
 
 help:
 	@echo "Targets:"
@@ -12,13 +12,17 @@ help:
 	@echo "  test   - run unit tests"
 
 up:
-	@echo "up target placeholder"
+	docker compose up -d
 
 down:
-	@echo "down target placeholder"
+	docker compose down
 
 reset:
-	@echo "rest target placeholder"
+	docker compose down -v
+	docker compose up -d
+
+status:
+	docker compose ps
 
 psql:
 	psql -h localhost -p 5432 -U postgres -d postgres
