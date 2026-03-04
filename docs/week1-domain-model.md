@@ -90,3 +90,17 @@ Represents a payment event against an invoice. Payments are append-only. Retries
 
 **Relationships**
 - References `invoices` (`invoice_id`).
+
+## Raw Table Ingestion Metadata
+
+All raw tables in the initial schema should include the following ingestion metadata columns:
+
+- `ingest_batch_id`
+- `ingested_at`
+
+These fields exist in addition to the business columns for each entity.
+
+`ingest_batch_id` identifies the batch or load that inserted the row.  
+`ingested_at` records the timestamp at which the row entered the platform.
+
+This ensures that raw data can later be traced back to a specific ingestion event and supports rerun safety, debugging, and reliability drills.
