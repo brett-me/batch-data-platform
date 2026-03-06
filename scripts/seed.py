@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import random
+from datetime import date, timedelta
 
 import psycopg
 
@@ -13,6 +14,9 @@ PLAN_CATALOGUE = [
     ("Pro", 2500),
     ("Enterprise", 7500),
 ]
+
+BASE_SUBSCRIPTIONS = 130
+DUPLICATE_RATE = 0.02  # 2%
 
 
 def get_args() -> argparse.Namespace:
@@ -61,6 +65,49 @@ def seed_customers(cur, rng: random.Random, n_customers: int) -> int:
     return n_customers
 
 
+def seed_subscriptions(cur, rng: random.Random, n_customers: int, n_subscriptions: int) -> int:
+    """
+    Create subscriptions with plausible lifecycle dates.
+    Small controlled duplicates are inserted by repeating some generated rows.
+    """
+    today = date.today()
+    start_window_days = 365
+
+    rows = []
+    for _ in range(n_subscriptions):
+        customer_id = rng.randint(1, n_customers)
+        plan_id = rng.randint(1, len(PLAN_CATALOGUE))
+
+        # start date sometime in last 12 months
+        start_date = today - timedelta(days=rng.randint(0, start_window_days))
+
+        # status distribution: mostly active
+        status = "active" if rng.random() < 0.75 else "cancelled"
+
+        # if cancelled, pick an end date after start date
+        end_date = None
+        if status == "cancelled":
+            days_active = rng.randint(1, 180)
+            end_date = start_date + timedelta(days=days_active)
+            if end_date > today:
+                end_date = today
+        
+        rows.append((customer_id, plan_id, start_date, end_date, status))
+
+        # controlled duplicate: repeat the same logical row sometimes
+        if rng.random() < DUPLICATE_RATE:
+            rows.append((customer_id, plan_id, start_date, end_date, status))
+    
+    cur.executemany(
+        """
+        insert into subscriptions (customer_id, plan_id, start_date, end_date, status)
+        values (%s, %s, %s, %s, %s)
+        """,
+        rows,
+    )
+    return len(rows)
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     args = get_args()
@@ -75,15 +122,23 @@ def main() -> None:
     with psycopg.connect(**db_config) as conn:
         with conn.cursor() as cur:
             # Week 1 reset semantics: clear seeded tables and reset identity counters.
-            cur.execute("truncate table customers restart identity;")
-            cur.execute("truncate table plans restart identity;")
+            cur.execute(
+                "truncate table subscriptions, customers, plans restart identity;"
+            )
 
             plans_inserted = seed_plans(cur)
             customers_inserted = seed_customers(cur, rng, n_customers)
 
+            n_subscriptions = BASE_SUBSCRIPTIONS * args.scale
+            subscriptions_inserted = seed_subscriptions(cur, rng, n_customers, n_subscriptions)
+
         conn.commit()
 
-    logging.info("Seed complete: plans=%s customers=%s", plans_inserted, customers_inserted)
+    logging.info("Seed complete: plans=%s customers=%s" "subscriptions=%s", 
+                 plans_inserted, 
+                 customers_inserted,
+                 subscriptions_inserted,
+    )
 
 
 if __name__ == "__main__":

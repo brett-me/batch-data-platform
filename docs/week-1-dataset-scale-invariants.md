@@ -53,4 +53,6 @@ During Week 1, the seed process uses a simple reset-and-reload approach for base
 - reset identity counters
 - reinsert deterministic rows
 
+Truncation order must respect foreign key dependencies (truncate child tables before parent tables), or truncate related tables in a single statement.
+
 This is a deliberate early-stage choice and will later be replaced by a rerun-safe idempotent strategy (e.g., upserts / conflict handling) as the platform reliability work progresses.
