@@ -34,6 +34,9 @@ ddl:
 		-f sql/ddl/003_create_invoices.sql \
 		-f sql/ddl/004_create_payments.sql
 
+smoke:
+	set -a; . ./.env; set +a; python3 scripts/smoke.py
+
 seed:
 	set -a; . ./.env; set +a; python3 scripts/seed.py
 

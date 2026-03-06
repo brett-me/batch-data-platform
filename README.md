@@ -24,6 +24,12 @@ Start the local platform:
 make up
 ```
 
+Run a smoke check:
+
+```bash
+make smoke
+```
+
 Apply the current database schema:
 
 ```bash
@@ -60,6 +66,7 @@ make down
 
 ```bash
 make up
+make smoke
 make ddl
 make seed
 make checks
