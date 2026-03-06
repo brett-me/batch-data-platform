@@ -38,7 +38,7 @@ seed:
 	set -a; . ./.env; set +a; python3 scripts/seed.py
 
 checks:
-	psql -h localhost -p 5432 -U postgres -d postgres \
+	psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
 		-f sql/checks/001_sanity.sql
 
 test:
