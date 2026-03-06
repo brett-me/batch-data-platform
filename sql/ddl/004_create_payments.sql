@@ -1,3 +1,4 @@
+-- schema version: 004
 -- sql/ddl/004_create_payments.sql
 
 create table if not exists payments (

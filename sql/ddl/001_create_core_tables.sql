@@ -1,3 +1,4 @@
+-- schema version: 001
 -- sql/ddl/001_create_core_tables.sql
 
 create table if not exists customers (

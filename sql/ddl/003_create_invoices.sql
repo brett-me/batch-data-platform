@@ -1,3 +1,4 @@
+-- schema version: 003
 -- sql/ddl/003_create_invoices.sql
 
 create table if not exists invoices (

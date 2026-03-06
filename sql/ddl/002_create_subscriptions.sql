@@ -1,3 +1,4 @@
+-- schema version: 002
 -- sql/ddl/002_create_subscriptions.sql
 
 create table if not exists subscriptions (

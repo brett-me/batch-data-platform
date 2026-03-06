@@ -28,7 +28,7 @@ psql:
 	psql -h localhost -p 5432 -U postgres -d postgres
 
 ddl:
-	psql -h localhost -p 5432 -U postgres -d postgres \
+	psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
 		-f sql/ddl/001_create_core_tables.sql \
 		-f sql/ddl/002_create_subscriptions.sql \
 		-f sql/ddl/003_create_invoices.sql \
