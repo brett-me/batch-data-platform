@@ -45,6 +45,8 @@ All raw tables should include:
 
 These fields provide ingestion metadata so that each row can later be traced back to a specific batch and load time.
 
+Seed includes controlled unpaid invoices and late payments for later rollups
+
 ## Week 1 Seed Reset Semantics (Temporary)
 
 During Week 1, the seed process uses a simple reset-and-reload approach for baseline development speed and predictability:

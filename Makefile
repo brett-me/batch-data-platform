@@ -30,7 +30,9 @@ psql:
 ddl:
 	psql -h localhost -p 5432 -U postgres -d postgres \
 		-f sql/ddl/001_create_core_tables.sql \
-		-f sql/ddl/002_create_subscriptions.sql
+		-f sql/ddl/002_create_subscriptions.sql \
+		-f sql/ddl/003_create_invoices.sql \
+		-f sql/ddl/004_create_payments.sql
 
 seed:
 	@echo "seed target placeholder"

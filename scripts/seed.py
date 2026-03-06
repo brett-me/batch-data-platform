@@ -6,7 +6,6 @@ from datetime import date, timedelta
 
 import psycopg
 
-
 BASE_CUSTOMERS = 100
 
 PLAN_CATALOGUE = [
@@ -16,7 +15,11 @@ PLAN_CATALOGUE = [
 ]
 
 BASE_SUBSCRIPTIONS = 130
-DUPLICATE_RATE = 0.02  # 2%
+DUPLICATE_RATE = 0.02
+
+BASE_INVOICES_PER_SUBSCRIPTION = 4
+UNPAID_RATE = 0.10 
+LATE_RATE = 0.05   
 
 
 def get_args() -> argparse.Namespace:
@@ -47,8 +50,7 @@ def seed_plans(cur) -> int:
     return len(PLAN_CATALOGUE)
 
 
-def seed_customers(cur, rng: random.Random, n_customers: int) -> int:
-    # Deterministic, readable customers.
+def seed_customers(cur, n_customers: int) -> int:
     rows = []
     for i in range(1, n_customers + 1):
         name = f"Customer {i:03d}"
@@ -66,10 +68,6 @@ def seed_customers(cur, rng: random.Random, n_customers: int) -> int:
 
 
 def seed_subscriptions(cur, rng: random.Random, n_customers: int, n_subscriptions: int) -> int:
-    """
-    Create subscriptions with plausible lifecycle dates.
-    Small controlled duplicates are inserted by repeating some generated rows.
-    """
     today = date.today()
     start_window_days = 365
 
@@ -78,26 +76,23 @@ def seed_subscriptions(cur, rng: random.Random, n_customers: int, n_subscription
         customer_id = rng.randint(1, n_customers)
         plan_id = rng.randint(1, len(PLAN_CATALOGUE))
 
-        # start date sometime in last 12 months
         start_date = today - timedelta(days=rng.randint(0, start_window_days))
 
-        # status distribution: mostly active
         status = "active" if rng.random() < 0.75 else "cancelled"
 
-        # if cancelled, pick an end date after start date
         end_date = None
         if status == "cancelled":
             days_active = rng.randint(1, 180)
             end_date = start_date + timedelta(days=days_active)
             if end_date > today:
                 end_date = today
-        
+
         rows.append((customer_id, plan_id, start_date, end_date, status))
 
-        # controlled duplicate: repeat the same logical row sometimes
+        # Controlled duplicate: repeat the same logical row sometimes
         if rng.random() < DUPLICATE_RATE:
             rows.append((customer_id, plan_id, start_date, end_date, status))
-    
+
     cur.executemany(
         """
         insert into subscriptions (customer_id, plan_id, start_date, end_date, status)
@@ -108,12 +103,112 @@ def seed_subscriptions(cur, rng: random.Random, n_customers: int, n_subscription
     return len(rows)
 
 
+def get_plan_prices(cur) -> dict[int, int]:
+    cur.execute("select plan_id, default_price_cents from plans;")
+    return {int(pid): int(price) for pid, price in cur.fetchall()}
+
+
+def seed_invoices_and_payments(
+    cur, rng: random.Random, plan_prices: dict[int, int]
+) -> tuple[int, int, int, int]:
+    """
+    returns: (invoices_inserted, payments_inserted, unpaid_invoices, late_payments)
+    """
+    cur.execute("select subscription_id, plan_id, start_date, end_date, status from subscriptions;")
+    subs = cur.fetchall()
+
+    invoices_rows = []
+    payments_rows = []
+
+    unpaid_count = 0
+    late_count = 0
+
+    today = date.today()
+
+    for subscription_id, plan_id, start_date, end_date, status in subs:
+        for k in range(BASE_INVOICES_PER_SUBSCRIPTION):
+            period_start = start_date + timedelta(days=30 * k)
+            period_end = period_start + timedelta(days=29)
+
+            if period_start > today:
+                break
+            if end_date is not None and period_start > end_date:
+                break
+
+            amount_due = plan_prices[int(plan_id)]
+            issued_at = period_end
+            due_date = issued_at + timedelta(days=14)
+
+            is_unpaid = rng.random() < UNPAID_RATE
+            if is_unpaid:
+                status_txt = "unpaid"
+                unpaid_count += 1
+            else:
+                status_txt = "paid"
+
+            invoices_rows.append(
+                (subscription_id, period_start, period_end, amount_due, issued_at, due_date, status_txt)
+            )
+
+            if not is_unpaid:
+                is_late = rng.random() < LATE_RATE
+                if is_late:
+                    paid_at = due_date + timedelta(days=rng.randint(1, 30))
+                    late_count += 1
+                else:
+                    paid_at = issued_at + timedelta(days=rng.randint(0, 10))
+
+                if paid_at > today:
+                    paid_at = today
+
+                payments_rows.append(
+                    (subscription_id, period_start, issued_at, amount_due, paid_at, "succeeded")
+                )
+
+    cur.executemany(
+        """
+        insert into invoices (
+            subscription_id, billing_period_start, billing_period_end,
+            amount_due_cents, issued_at, due_date, status
+        )
+        values (%s, %s, %s, %s, %s, %s, %s)
+        """,
+        invoices_rows,
+    )
+
+    cur.execute(
+        """
+        select invoice_id, subscription_id, billing_period_start, issued_at
+        from invoices
+        """
+    )
+    invoice_id_map = {
+        (sid, bps, ia): iid for (iid, sid, bps, ia) in cur.fetchall()
+    }
+
+    payment_insert_rows = []
+    for sid, bps, ia, amount_due, paid_at, pay_status in payments_rows:
+        invoice_id = invoice_id_map[(sid, bps, ia)]
+        payment_insert_rows.append((invoice_id, amount_due, paid_at, pay_status))
+
+    cur.executemany(
+        """
+        insert into payments (invoice_id, amount_paid_cents, paid_at, status)
+        values (%s, %s, %s, %s)
+        """,
+        payment_insert_rows,
+    )
+
+    return (len(invoices_rows), len(payment_insert_rows), unpaid_count, late_count)
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     args = get_args()
 
     rng = random.Random(args.seed)
     n_customers = BASE_CUSTOMERS * args.scale
+    n_subscriptions = BASE_SUBSCRIPTIONS * args.scale
 
     logging.info("Seed starting (seed=%s scale=%s)", args.seed, args.scale)
 
@@ -121,23 +216,30 @@ def main() -> None:
 
     with psycopg.connect(**db_config) as conn:
         with conn.cursor() as cur:
-            # Week 1 reset semantics: clear seeded tables and reset identity counters.
             cur.execute(
-                "truncate table subscriptions, customers, plans restart identity;"
+                "truncate table payments, invoices, subscriptions, customers, plans restart identity;"
             )
 
             plans_inserted = seed_plans(cur)
-            customers_inserted = seed_customers(cur, rng, n_customers)
-
-            n_subscriptions = BASE_SUBSCRIPTIONS * args.scale
+            customers_inserted = seed_customers(cur, n_customers)
             subscriptions_inserted = seed_subscriptions(cur, rng, n_customers, n_subscriptions)
+
+            plan_prices = get_plan_prices(cur)
+            invoices_inserted, payments_inserted, unpaid_invoices, late_payments = seed_invoices_and_payments(
+                cur, rng, plan_prices
+            )
 
         conn.commit()
 
-    logging.info("Seed complete: plans=%s customers=%s" "subscriptions=%s", 
-                 plans_inserted, 
-                 customers_inserted,
-                 subscriptions_inserted,
+    logging.info(
+        "Seed complete: plans=%s customers=%s subscriptions=%s invoices=%s payments=%s unpaid_invoices=%s late_payments=%s",
+        plans_inserted,
+        customers_inserted,
+        subscriptions_inserted,
+        invoices_inserted,
+        payments_inserted,
+        unpaid_invoices,
+        late_payments,
     )
 
 
