@@ -35,7 +35,7 @@ ddl:
 		-f sql/ddl/004_create_payments.sql
 
 seed:
-	python3 scripts/seed.py
+	set -a; . ./.env; set +a; python3 scripts/seed.py
 
 checks:
 	psql -h localhost -p 5432 -U postgres -d postgres \
