@@ -4,9 +4,9 @@ Batch-orientated data platform built with reliability, reproducibility and opera
 
 ## Purpose
 
-This repository defines a local-first batch data platform with a synthetic SaaS billing domain used to exercise reproducible infrastructure, schema management, and controlled database operations.
+This repository defines a local-first batch data platform with a synthetic SaaS billing domain and a focus on reproducible infrastructure, schema management, and controlled database operations.
 
-The current implementation establishes the operational foundation of the platform: containerised local infrastructure, standardised Makefile commands, environment-based configuration, and initial schema definition in PostgreSQL.
+The current implementation establishes the operational foundation of the platform: containerised local infrastructure, standardised Makefile commands, environment-based configuration, deterministic seeding, and schema definition in PostgreSQL.
 
 The platform is designed to be built incrementally while maintaining a professional, production-minded repository structure.
 
@@ -70,7 +70,6 @@ make smoke
 make ddl
 make seed
 make checks
-make psql
 make down
 ```
 
@@ -81,9 +80,13 @@ make down
 ├── docker-compose.yml    # local infrastructure definition
 ├── Makefile              # operational interface (make targets)
 ├── .env.example          # configuration template
-├── docs/                 # design and architecture documentation
-├── sql/ddl/              # schema definition files
-├── sql/checks/           # data quality checks
+├── docs/
+│   ├── decisions/        # architectural and operational decision records
+│   ├── design/           # design notes and modelling artefacts
+│   └── runbooks/         # operational runbooks
+├── sql/
+│   ├── ddl/              # schema definition files
+│   └── checks/           # data quality checks
 ├── scripts/              # operational scripts
 └── src/                  # Python package
 ```
@@ -94,26 +97,51 @@ The repository includes:
 
 - a containerised PostgreSQL instance defined in `docker-compose.yml`
 - a local configuration contract using `.env.example`
-- Makefile targets for platform start-up, shutdown, database access, schema application, seeding, and checks
+- Makefile targets for platform start-up, shutdown, smoke checks, database access, schema application, seeding, and checks
 - schema DDL files in `sql/ddl/` for customers, plans, subscriptions, invoices, and payments
-- a deterministic seeding script in `scripts/seed.py` that loads a synthetic billing dataset (including controlled unpaid invoices and late payments)
+- a deterministic seeding script in `scripts/seed.py` that loads a synthetic billing dataset, including controlled unpaid invoices and late payments
+- a smoke check in `scripts/smoke.py`
 - sanity checks in `sql/checks/001_sanity.sql`
-- domain documentation in `docs/week1-domain-model.md`
+- design documentation in `docs/design/`, including the domain model and dataset scale/invariant notes
+- a formal rerun-semantics decision record in `docs/decisions/0001-seed-rerun-semantics.md`
 
-This establishes a reproducible local database environment, a repeatable schema + seed workflow, and basic validation primitives for later reliability drills.
+This establishes a reproducible local database environment, a repeatable schema and seed workflow, and basic validation primitives for later reliability drills.
 
 ## Clean-room Rebuild
 
-To wipe and rebuild the local platform:
+Use this sequence to wipe local state and rebuild the platform from scratch:
+
+1. Reset the local platform:
 
 ```bash
 make reset
+```
+
+2. Run a smoke check:
+
+```bash
+make smoke
+```
+
+3. Apply the schema:
+
+```bash
 make ddl
+```
+
+4. Seed synthetic data:
+
+```bash
 make seed
+```
+
+5. Run sanity checks:
+
+```bash
 make checks
 ```
 
-This removes the local database volume and recreates the platform from scratch.
+A successful clean-room rebuild means the platform can be recreated from a known clean state using only the repository's documented interface.
 
 ## Configuration
 
