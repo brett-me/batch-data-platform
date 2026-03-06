@@ -35,10 +35,11 @@ ddl:
 		-f sql/ddl/004_create_payments.sql
 
 seed:
-	@echo "seed target placeholder"
+	python3 scripts/seed.py
 
 checks:
-	@echo "checks target placeholder"
+	psql -h localhost -p 5432 -U postgres -d postgres \
+		-f sql/checks/001_sanity.sql
 
 test:
 	@echo "test target place holder"
