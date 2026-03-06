@@ -6,6 +6,15 @@ import random
 import psycopg
 
 
+BASE_CUSTOMERS = 100
+
+PLAN_CATALOGUE = [
+    ("Basic", 1000),
+    ("Pro", 2500),
+    ("Enterprise", 7500),
+]
+
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Seed synthetic platform data")
     parser.add_argument("--seed", type=int, default=int(os.getenv("SEED", "123")))
@@ -23,23 +32,58 @@ def get_db_config() -> dict:
     }
 
 
+def seed_plans(cur) -> int:
+    cur.executemany(
+        """
+        insert into plans (plan_name, default_price_cents)
+        values (%s, %s)
+        """,
+        PLAN_CATALOGUE,
+    )
+    return len(PLAN_CATALOGUE)
+
+
+def seed_customers(cur, rng: random.Random, n_customers: int) -> int:
+    # Deterministic, readable customers.
+    rows = []
+    for i in range(1, n_customers + 1):
+        name = f"Customer {i:03d}"
+        email = f"customer{i:03d}@example.com"
+        rows.append((name, email))
+
+    cur.executemany(
+        """
+        insert into customers (customer_name, customer_email)
+        values (%s, %s)
+        """,
+        rows,
+    )
+    return n_customers
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     args = get_args()
 
     rng = random.Random(args.seed)
-    logging.info("Seed script starting")
-    logging.info("seed=%s scale=%s sample_random=%s", args.seed, args.scale, rng.randint(1, 100))
+    n_customers = BASE_CUSTOMERS * args.scale
+
+    logging.info("Seed starting (seed=%s scale=%s)", args.seed, args.scale)
 
     db_config = get_db_config()
 
     with psycopg.connect(**db_config) as conn:
         with conn.cursor() as cur:
-            cur.execute("select current_database(), current_user;")
-            db_name, db_user = cur.fetchone()
+            # Week 1 reset semantics: clear seeded tables and reset identity counters.
+            cur.execute("truncate table customers restart identity;")
+            cur.execute("truncate table plans restart identity;")
 
-    logging.info("Connected successfully to database=%s as user=%s", db_name, db_user)
-    logging.info("Seed skeleton complete")
+            plans_inserted = seed_plans(cur)
+            customers_inserted = seed_customers(cur, rng, n_customers)
+
+        conn.commit()
+
+    logging.info("Seed complete: plans=%s customers=%s", plans_inserted, customers_inserted)
 
 
 if __name__ == "__main__":

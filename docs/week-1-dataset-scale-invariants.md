@@ -44,3 +44,13 @@ All raw tables should include:
 - `ingested_at`
 
 These fields provide ingestion metadata so that each row can later be traced back to a specific batch and load time.
+
+## Week 1 Seed Reset Semantics (Temporary)
+
+During Week 1, the seed process uses a simple reset-and-reload approach for baseline development speed and predictability:
+
+- `truncate` seeded tables
+- reset identity counters
+- reinsert deterministic rows
+
+This is a deliberate early-stage choice and will later be replaced by a rerun-safe idempotent strategy (e.g., upserts / conflict handling) as the platform reliability work progresses.
