@@ -18,6 +18,12 @@ Create a local environment configuration:
 cp .env.example .env
 ```
 
+Install Python development dependencies:
+
+```bash
+make dev-install
+```
+
 Start the local platform:
 
 ```bash
@@ -62,18 +68,26 @@ Stop the platform when finished:
 make down
 ```
 
-### Discover available Commands
+### Useful operational commands
 
-To see the current operational interface for the platform:
+Show the available Make targets:
 
 ```bash
 make help
 ```
 
+Check container status:
+
+```bash
+make status
+```
+
 ### Run the full local flow
 
 ```bash
+make dev-install
 make up
+make status
 make smoke
 make ddl
 make seed
@@ -98,7 +112,8 @@ make down
 │   ├── ddl/              # schema definition files
 │   └── checks/           # data quality checks
 ├── scripts/              # CLI entry-point scripts
-├── src/                  # reusable Python package code
+├── src/
+│   └── batch_data_platform/  # reusable Python package code
 └── tests/                # unit tests
 ```
 
@@ -108,7 +123,7 @@ The repository includes:
 
 - a containerised PostgreSQL instance defined in `docker-compose.yml`
 - a local configuration contract using `.env.example`
-- Makefile targets for platform start-up, shutdown, smoke checks, database access, schema application, seeding, and checks
+- Makefile targets for environment setup, platform lifecycle, smoke checks, database access, schema application, seeding, validation, testing, and linting
 - schema DDL files in `sql/ddl/` for customers, plans, subscriptions, invoices, and payments
 - reusable Python package code in `src/batch_data_platform/`
 - CLI entry-point scripts in `scripts/seed.py` and `scripts/smoke.py`
