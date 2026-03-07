@@ -32,16 +32,16 @@ Start the local platform:
 make up
 ```
 
-Run a smoke check:
-
-```bash
-make smoke
-```
-
 Apply the current database schema:
 
 ```bash
 make ddl
+```
+
+Run a smoke check:
+
+```bash
+make smoke
 ```
 
 Seed synthetic data:
