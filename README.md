@@ -1,5 +1,7 @@
 # Batch Data Platform
 
+[![CI](https://github.com/brett-me/batch-data-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/brett-me/batch-data-platform/actions/workflows/ci.yml)
+
 Batch-oriented data platform built with reliability, reproducibility and operational controls in mind.
 
 ## Purpose
@@ -94,6 +96,15 @@ make seed
 make checks
 make down
 ```
+
+## Before You Push
+
+Run the basic local quality gates before pushing changes:
+
+```bash
+make test
+make lint
+make checks
 
 ## Repository Structure
 
