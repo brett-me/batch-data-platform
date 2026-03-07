@@ -1,6 +1,6 @@
 # Batch Data Platform
 
-Batch-orientated data platform built with reliability, reproducibility and operational controls in mind.
+Batch-oriented data platform built with reliability, reproducibility and operational controls in mind.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ This repository defines a local-first batch data platform with a synthetic SaaS 
 
 The current implementation establishes the operational foundation of the platform: containerised local infrastructure, standardised Makefile commands, environment-based configuration, deterministic seeding, and schema definition in PostgreSQL.
 
-The platform is designed to be built incrementally while maintaining a professional, production-minded repository structure.
+The platform is developed incrementally while maintaining a professional, production-minded repository structure.
 
 ## Quickstart
 
@@ -62,7 +62,7 @@ make psql
 
 You will be prompted for the Postgres password (default: `postgres`).
 
-Stop the platform when finished:
+Stop the platform:
 
 ```bash
 make down
@@ -127,7 +127,7 @@ The repository includes:
 - schema DDL files in `sql/ddl/` for customers, plans, subscriptions, invoices, and payments
 - reusable Python package code in `src/batch_data_platform/`
 - CLI entry-point scripts in `scripts/seed.py` and `scripts/smoke.py`
-- a deterministic seeding workflow that loads a synthetic billing dataset, including controlled unpaid invoices and late payments
+- a deterministic seeding workflow that loads a synthetic billing dataset with controlled unpaid invoices and late payments
 - a smoke check in `scripts/smoke.py`
 - sanity checks in `sql/checks/001_sanity.sql`
 - unit tests in `tests/test_smoke_unit.py`
@@ -183,7 +183,7 @@ cp .env.example .env
 
 Environment variables define database connection settings and runtime parameters for local development.
 
-Typical variables include:
+Key variables include:
 
 - `DB_HOST`
 - `DB_PORT`
