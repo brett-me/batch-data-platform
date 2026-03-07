@@ -185,6 +185,101 @@ make checks
 
 A successful clean-room rebuild means the platform can be recreated from a known clean state using only the repository's documented interface.
 
+## Troubleshooting
+
+### `make up` succeeds but the platform is not ready
+
+Check container state first:
+
+```bash
+make status
+```
+
+If the PostgreSQL container is still starting, wait a few seconds and run the command again.
+
+### `make smoke` fails because expected tables are missing
+
+The smoke check validates both:
+
+- database reachability
+- existence of the expected tables
+
+Apply the schema before running the smoke check:
+
+```bash
+make ddl
+make smoke
+```
+
+### `make psql`, `make ddl`, or `make checks` prompts for a password
+
+Database connection settings are loaded from `.env`.
+
+For local development convenience, configure a PostgreSQL password file at:
+
+```text
+~/.pgpass
+```
+
+Example entry for the default local setup:
+
+```text
+localhost:5432:postgres:postgres:postgres
+```
+
+Then lock file permissions:
+
+```bash
+chmod 600 ~/.pgpass
+```
+
+### Port `5432` is already in use
+
+Check whether another PostgreSQL instance or container is already bound to port `5432`.
+
+Stop the local platform first:
+
+```bash
+make down
+```
+
+If the conflict is outside this repository, stop the other local service or change the configured port.
+
+### Local database state appears inconsistent
+
+Reset the local platform and rebuild from a clean state:
+
+```bash
+make reset
+make ddl
+make smoke
+make seed
+make checks
+```
+
+`make reset` removes the local PostgreSQL volume and starts the container again. This deletes the current local database state.
+
+### `make checks` fails
+
+Run the local workflow in order:
+
+```bash
+make ddl
+make smoke
+make seed
+make checks
+```
+
+If checks still fail, inspect the output first. The sanity checks are designed to fail loudly when required conditions are not met.
+
+### Need a quick view of available commands
+
+Show the current Make targets:
+
+```bash
+make help
+```
+
 ## Configuration
 
 Create a local environment file from the example:
