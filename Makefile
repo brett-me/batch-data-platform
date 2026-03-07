@@ -21,7 +21,7 @@ help:
 dev-install:
 	python3 -m pip install -e ".[test]"
 
-# platform lifecyle
+# platform lifecycle
 up:
 	docker compose up -d
 
@@ -40,7 +40,7 @@ reset:
 
 # database / data workflow
 ddl:
-	psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+	set -a; . ./.env; set +a; psql -v ON_ERROR_STOP=1 -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" \
 		-f sql/ddl/001_create_core_tables.sql \
 		-f sql/ddl/002_create_subscriptions.sql \
 		-f sql/ddl/003_create_invoices.sql \
@@ -50,11 +50,11 @@ seed:
 	set -a; . ./.env; set +a; python3 scripts/seed.py
 
 checks:
-	psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+	set -a; . ./.env; set +a; psql -v ON_ERROR_STOP=1 -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" \
 		-f sql/checks/001_sanity.sql
 
 psql:
-	psql -h localhost -p 5432 -U postgres -d postgres
+	set -a; . ./.env; set +a; psql -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME"
 
 
 # code quality
