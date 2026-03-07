@@ -1,26 +1,9 @@
 import logging
-import os
 
 import psycopg
 
-
-EXPECTED_TABLES = {
-    "customers",
-    "plans",
-    "subscriptions",
-    "invoices",
-    "payments",
-}
-
-
-def get_db_config() -> dict:
-    return {
-        "host": os.getenv("DB_HOST", "localhost"),
-        "port": int(os.getenv("DB_PORT", "5432")),
-        "dbname": os.getenv("DB_NAME", "postgres"),
-        "user": os.getenv("DB_USER", "postgres"),
-        "password": os.getenv("DB_PASSWORD", "postgres"),
-    }
+from batch_data_platform.config import get_db_config
+from batch_data_platform.smoke_checks import get_missing_tables
 
 
 def main() -> None:
@@ -38,7 +21,7 @@ def main() -> None:
             )
             found_tables = {row[0] for row in cur.fetchall()}
 
-    missing_tables = EXPECTED_TABLES - found_tables
+    missing_tables = get_missing_tables(found_tables)
 
     if missing_tables:
         raise RuntimeError(

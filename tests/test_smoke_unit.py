@@ -1,4 +1,5 @@
-from scripts.seed import PLAN_CATALOGUE, get_db_config
+from batch_data_platform.config import PLAN_CATALOGUE, get_db_config
+from batch_data_platform.smoke_checks import get_missing_tables
 
 
 def test_plan_catalogue_is_defined():
@@ -24,3 +25,10 @@ def test_get_db_config_defaults(monkeypatch):
         "user": "postgres",
         "password": "postgres",
     }
+
+
+def test_get_missing_tables_returns_difference():
+    found = {"customers", "plans"}
+    missing = get_missing_tables(found)
+
+    assert missing == {"subscriptions", "invoices", "payments"}
