@@ -105,6 +105,7 @@ Run the basic local quality gates before pushing changes:
 make test
 make lint
 make checks
+```
 
 ## Repository Structure
 
