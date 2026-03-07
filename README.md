@@ -62,6 +62,14 @@ Stop the platform when finished:
 make down
 ```
 
+### Discover available Commands
+
+To see the current operational interface for the platform:
+
+```bash
+make help
+```
+
 ### Run the full local flow
 
 ```bash

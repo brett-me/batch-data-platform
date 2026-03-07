@@ -1,13 +1,14 @@
-.PHONY: help up down reset status psql ddl seed checks test
+.PHONY: help up down reset smoke status psql ddl seed checks test
 
 help:
 	@echo "Targets:"
 	@echo "  up     - start local platform"
 	@echo "  down   - stop local platform"
 	@echo "  reset  - wipe + rebuild platform"
+	@echo "  smoke  - verify database reachability and expected tables"
 	@echo "  psql   - open DB shell"
-	@echo "  ddl    - apply schema"
-	@echo "  seed   - seed data"
+	@echo "  ddl    - apply schema files in order"
+	@echo "  seed   - load deterministic synthetic data"
 	@echo "  checks - run sanity checks"
 	@echo "  test   - run unit tests"
 
