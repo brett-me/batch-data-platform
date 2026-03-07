@@ -197,10 +197,11 @@ Environment variables define database connection settings and runtime parameters
 
 Key variables include:
 
-- `DB_HOST`
-- `DB_PORT`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `SEED`
-- `SCALE`
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`  
+  PostgreSQL connection settings used by Make targets and Python scripts.
+
+- `SEED`  
+  Controls deterministic synthetic data generation. The same seed should produce the same logical dataset.
+
+- `SCALE`  
+  Controls the size of the seeded dataset. The default value is intended for fast local iteration.
