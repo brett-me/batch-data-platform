@@ -88,6 +88,8 @@ make down
 ├── docker-compose.yml    # local infrastructure definition
 ├── Makefile              # operational interface (make targets)
 ├── .env.example          # configuration template
+├── .github/
+│   └── workflows/        # CI workflow definitions
 ├── docs/
 │   ├── decisions/        # architectural and operational decision records
 │   ├── design/           # design notes and modelling artefacts
@@ -95,8 +97,9 @@ make down
 ├── sql/
 │   ├── ddl/              # schema definition files
 │   └── checks/           # data quality checks
-├── scripts/              # operational scripts
-└── src/                  # Python package
+├── scripts/              # CLI entry-point scripts
+├── src/                  # reusable Python package code
+└── tests/                # unit tests
 ```
 
 ## Current State
@@ -107,13 +110,17 @@ The repository includes:
 - a local configuration contract using `.env.example`
 - Makefile targets for platform start-up, shutdown, smoke checks, database access, schema application, seeding, and checks
 - schema DDL files in `sql/ddl/` for customers, plans, subscriptions, invoices, and payments
-- a deterministic seeding script in `scripts/seed.py` that loads a synthetic billing dataset, including controlled unpaid invoices and late payments
+- reusable Python package code in `src/batch_data_platform/`
+- CLI entry-point scripts in `scripts/seed.py` and `scripts/smoke.py`
+- a deterministic seeding workflow that loads a synthetic billing dataset, including controlled unpaid invoices and late payments
 - a smoke check in `scripts/smoke.py`
 - sanity checks in `sql/checks/001_sanity.sql`
-- design documentation in `docs/design/`, including the domain model and dataset scale/invariant notes
+- unit tests in `tests/test_smoke_unit.py`
+- a CI workflow in `.github/workflows/ci.yml`
+- design documentation in `docs/design/`
 - a formal rerun-semantics decision record in `docs/decisions/0001-seed-rerun-semantics.md`
 
-This establishes a reproducible local database environment, a repeatable schema and seed workflow, and basic validation primitives for later reliability drills.
+This establishes a reproducible local database environment, a repeatable schema and seed workflow, basic validation primitives, and an initial automated testing layer.
 
 ## Clean-room Rebuild
 
