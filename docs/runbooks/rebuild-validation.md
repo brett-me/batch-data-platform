@@ -157,3 +157,5 @@ These changes are reflected in the current repository state.
 The documented local rebuild workflow is valid for the current repository state.
 
 The platform can be recreated from a known clean state using the documented commands without requiring undocumented recovery steps.
+
+Validation evidence for row counts, orphan checks, unpaid invoices, and late payments is enforced through make checks via sql/checks/001_sanity.sql.
