@@ -27,27 +27,35 @@ make lint
 ## Results by Step
 
 ### `cp .env.example .env`
+
 Succeeded as expected.
 
 ### `make dev-install`
+
 Succeeded.
 
 Observation:
+
 - local installation defaulted to user scope because the normal site-packages directory was not writeable
 
 ### `make up`
+
 Succeeded as expected.
 
 ### `make status`
+
 Succeeded as expected.
 
 Observation:
+
 - useful for confirming container state immediately after `make up`
 
 ### `make smoke`
+
 Failed before schema application.
 
 Output indicated that expected tables were missing:
+
 - `customers`
 - `plans`
 - `subscriptions`
@@ -55,37 +63,47 @@ Output indicated that expected tables were missing:
 - `payments`
 
 This behaviour was consistent with the current implementation, because the smoke check validates both:
+
 - database reachability
 - expected table existence
 
 At this point in the rebuild flow, the schema had not yet been applied.
 
 ### `make ddl`
+
 Succeeded as expected.
 
 ### `make smoke` (after `make ddl`)
+
 Succeeded.
 
 Output confirmed:
+
 - database reachable
 - expected tables exist
 
 ### `make seed`
+
 Succeeded as expected.
 
 ### `make checks`
+
 Succeeded as expected.
 
 ### `make psql`
+
 Succeeded as expected.
 
 ### `make down`
+
 Succeeded as expected.
 
 ### `make test`
+
 Succeeded as expected.
 
 ### `make lint`
+
 Succeeded as expected.
 
 ## Overall Result
@@ -97,6 +115,7 @@ Schema application, seeding, sanity checks, unit tests, and lint checks all comp
 ## Issues Identified
 
 ### Smoke check ordering in README
+
 The documented Quickstart placed `make smoke` before `make ddl`.
 
 Because the smoke check validates the existence of expected tables, this ordering caused the command to fail before schema application.
@@ -104,6 +123,7 @@ Because the smoke check validates the existence of expected tables, this orderin
 This was a documentation and workflow-order issue, not a defect in the smoke check itself.
 
 ### `make dev-install` user-install message
+
 The following message appeared during local dependency installation:
 
 > Defaulting to user installation because normal site-packages is not writeable
@@ -111,6 +131,7 @@ The following message appeared during local dependency installation:
 This did not block execution. It is a local environment note and may be documented separately if it appears consistently across setups.
 
 ### Repository structure presentation
+
 The README structure tree was accurate but could be presented in a more workflow-oriented order.
 
 ## Changes Implemented as a Result of Validation
