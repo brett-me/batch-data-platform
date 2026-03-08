@@ -159,16 +159,16 @@ Use this sequence to wipe local state and rebuild the platform from scratch:
 make reset
 ```
 
-2. Run a smoke check:
-
-```bash
-make smoke
-```
-
-3. Apply the schema:
+2. Apply the schema:
 
 ```bash
 make ddl
+```
+
+3. Run a smoke check:
+
+```bash
+make smoke
 ```
 
 4. Seed synthetic data:
@@ -182,8 +182,6 @@ make seed
 ```bash
 make checks
 ```
-
-A successful clean-room rebuild means the platform can be recreated from a known clean state using only the repository's documented interface.
 
 ## Troubleshooting
 
@@ -257,7 +255,9 @@ make seed
 make checks
 ```
 
-`make reset` removes the local PostgreSQL volume and starts the container again. This deletes the current local database state.
+`make reset` removes the local PostgreSQL volume and starts the container again. This deletes the current local database state. 
+
+`make reset` recreates the local database container but does not apply schema. Until `make ddl` runs, `make smoke` will fail because the expected tables do not yet exist.
 
 ### `make checks` fails
 
