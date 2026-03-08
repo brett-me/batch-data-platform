@@ -2,15 +2,15 @@
 
 [![CI](https://github.com/brett-me/batch-data-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/brett-me/batch-data-platform/actions/workflows/ci.yml)
 
-Batch-oriented data platform built with reliability, reproducibility and operational controls in mind.
+Local-first PostgreSQL batch data platform for reproducible schema application, deterministic synthetic data generation, and operational validation.
 
 ## Purpose
 
-This repository defines a local-first batch data platform with a synthetic SaaS billing domain and a focus on reproducible infrastructure, schema management, and controlled database operations.
+This repository provides a local-first batch data platform built around a synthetic SaaS billing domain.
 
-The current implementation establishes the operational foundation of the platform: containerised local infrastructure, standardised Makefile commands, environment-based configuration, deterministic seeding, and schema definition in PostgreSQL.
+It supports reproducible schema application, deterministic synthetic data generation, and operational validation through a documented command-line workflow.
 
-The platform is developed incrementally while maintaining a professional, production-minded repository structure.
+The current implementation is intended for local rebuild, inspection, and validation of a small PostgreSQL-backed batch platform.
 
 ## Quickstart
 
@@ -62,7 +62,7 @@ Open a database shell:
 make psql
 ```
 
-You will be prompted for the Postgres password (default: `postgres`).
+Depending on local PostgreSQL credential setup, psql may prompt for a password.
 
 Stop the platform:
 
@@ -90,64 +90,33 @@ make status
 make dev-install
 make up
 make status
-make smoke
 make ddl
+make smoke
 make seed
 make checks
 make down
 ```
 
-## Before You Push
+## Configuration
 
-Run the basic local quality gates before pushing changes:
+Create a local environment file from the example:
 
 ```bash
-make test
-make lint
-make checks
+cp .env.example .env
 ```
 
-## Repository Structure
+Environment variables define database connection settings and seed controls for local development
 
-```text
-.
-├── docker-compose.yml    # local infrastructure definition
-├── Makefile              # operational interface (make targets)
-├── .env.example          # configuration template
-├── .github/
-│   └── workflows/        # CI workflow definitions
-├── docs/
-│   ├── decisions/        # architectural and operational decision records
-│   ├── design/           # design notes and modelling artefacts
-│   └── runbooks/         # operational runbooks
-├── sql/
-│   ├── ddl/              # schema definition files
-│   └── checks/           # data quality checks
-├── scripts/              # CLI entry-point scripts
-├── src/
-│   └── batch_data_platform/  # reusable Python package code
-└── tests/                # unit tests
-```
+Key variables include:
 
-## Current State
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`  
+  PostgreSQL connection settings used by Make targets and Python scripts.
 
-The repository includes:
+- `SEED`  
+  Controls deterministic synthetic data generation. The same seed should produce the same logical dataset.
 
-- a containerised PostgreSQL instance defined in `docker-compose.yml`
-- a local configuration contract using `.env.example`
-- Makefile targets for environment setup, platform lifecycle, smoke checks, database access, schema application, seeding, validation, testing, and linting
-- schema DDL files in `sql/ddl/` for customers, plans, subscriptions, invoices, and payments
-- reusable Python package code in `src/batch_data_platform/`
-- CLI entry-point scripts in `scripts/seed.py` and `scripts/smoke.py`
-- a deterministic seeding workflow that loads a synthetic billing dataset with controlled unpaid invoices and late payments
-- a smoke check in `scripts/smoke.py`
-- sanity checks in `sql/checks/001_sanity.sql`
-- unit tests in `tests/test_smoke_unit.py`
-- a CI workflow in `.github/workflows/ci.yml`
-- design documentation in `docs/design/`
-- a formal rerun-semantics decision record in `docs/decisions/0001-seed-rerun-semantics.md`
-
-This establishes a reproducible local database environment, a repeatable schema and seed workflow, basic validation primitives, and an initial automated testing layer.
+- `SCALE`  
+  Controls the size of the seeded dataset. The default value is intended for fast local iteration.
 
 ## Clean-room Rebuild
 
@@ -255,9 +224,7 @@ make seed
 make checks
 ```
 
-`make reset` removes the local PostgreSQL volume and starts the container again. This deletes the current local database state. 
-
-`make reset` recreates the local database container but does not apply schema. Until `make ddl` runs, `make smoke` will fail because the expected tables do not yet exist.
+`make reset` recreates the local database container and removes the local PostgreSQL volume. This deletes the current local database state.
 
 ### `make checks` fails
 
@@ -280,23 +247,72 @@ Show the current Make targets:
 make help
 ```
 
-## Configuration
+## Before You Push
 
-Create a local environment file from the example:
+Run the basic local quality gates before pushing changes:
 
 ```bash
-cp .env.example .env
+make test
+make lint
 ```
 
-Environment variables define database connection settings and runtime parameters for local development.
+If the change affects schema, seeded data, or validation logic, also run:
 
-Key variables include:
+```bash
+make checks
+```
 
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`  
-  PostgreSQL connection settings used by Make targets and Python scripts.
+## Repository Structure
 
-- `SEED`  
-  Controls deterministic synthetic data generation. The same seed should produce the same logical dataset.
+```text
+.
+├── .github/
+│   └── workflows/        # CI workflow definitions
+├── Makefile              # operational interface
+├── README.md             # repository overview and operating instructions
+├── docker-compose.yml    # local infrastructure definition
+├── docs/
+│   ├── decisions/        # architectural and operational decisions
+│   │   └── 0001-seed-rerun-semantics.md
+│   ├── design/           # domain and data-model design notes
+│   │   ├── dataset-scale-invariants.md
+│   │   └── domain-model.md
+│   └── runbooks/         # operational validation and troubleshooting notes
+│       └── rebuild-validation.md
+├── pyproject.toml        # Python project metadata and development dependencies
+├── scripts/              # CLI entry-point scripts
+│   ├── seed.py
+│   └── smoke.py
+├── sql/
+│   ├── checks/           # sanity and validation queries
+│   │   └── 001_sanity.sql
+│   └── ddl/              # schema definition files
+│       ├── 001_create_core_tables.sql
+│       ├── 002_create_subscriptions.sql
+│       ├── 003_create_invoices.sql
+│       └── 004_create_payments.sql
+├── src/
+│   └── batch_data_platform/  # reusable Python package code
+│       ├── __init__.py
+│       ├── config.py
+│       ├── seeding.py
+│       └── smoke_checks.py
+└── tests/                # unit tests
+    └── test_smoke_unit.py
+```
 
-- `SCALE`  
-  Controls the size of the seeded dataset. The default value is intended for fast local iteration.
+## Current State
+
+The repository currently provides:
+
+- a local PostgreSQL-backed batch platform defined with Docker Compose
+- a Makefile-based operational interface for setup, rebuild, schema application, seeding, validation, testing, and linting
+- schema definition files for customers, plans, subscriptions, invoices, and payments
+- deterministic synthetic data generation for local development and validation
+- smoke checks and sanity checks for platform and data validation
+- reusable Python package code under `src/batch_data_platform/`
+- CLI entry-point scripts for seeding and smoke validation
+- unit tests and CI workflow checks for basic code and workflow verification
+- supporting design notes, decision records, and runbook documentation under `docs/`
+
+The current implementation supports local rebuild, schema application, seeded data generation, and validation through a documented command-line workflow.
