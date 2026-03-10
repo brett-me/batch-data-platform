@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 ENV_RUN = set -a; . ./.env; set +a;
 
-.PHONY: help dev-install up status smoke down reset ddl seed checks psql test lint
+.PHONY: help dev-install up status smoke down reset ddl seed stage checks psql test lint
 
 # discovery
 help:
@@ -17,6 +17,7 @@ help:
 	@echo "  reset        - wipe and rebuild platform"
 	@echo "  ddl          - apply schema files in order"
 	@echo "  seed         - load deterministic synthetic data"
+	@echo "  stage		  - build staging views"
 	@echo "  checks       - run sanity checks"
 	@echo "  psql         - open database shell"
 	@echo "  test         - run unit tests"
@@ -56,11 +57,16 @@ ddl:
 		-f sql/ddl/001_create_core_tables.sql \
 		-f sql/ddl/002_create_subscriptions.sql \
 		-f sql/ddl/003_create_invoices.sql \
-		-f sql/ddl/004_create_payments.sql
+		-f sql/ddl/004_create_payments.sql \
+		-f sql/ddl/005_create_staging_schema.sql
 
 seed:
 	@echo "==> Seeding synthetic data"
 	$(ENV_RUN) python3 scripts/seed.py
+
+stage:
+	@echo "==> Building staging views"
+	$(ENV_RUN) python3 scripts/stage.py
 
 checks:
 	@echo "==> Running sanity checks"
