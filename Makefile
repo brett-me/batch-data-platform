@@ -71,7 +71,8 @@ stage:
 checks:
 	@echo "==> Running sanity checks"
 	$(ENV_RUN) psql -v ON_ERROR_STOP=1 -h "$$DB_HOST" -p "$$DB_PORT" -U "$$DB_USER" -d "$$DB_NAME" \
-		-f sql/checks/001_sanity.sql
+		-f sql/checks/001_sanity.sql \
+		-f sql/checks/002_staging.sql
 
 psql:
 	@echo "==> Opening database shell"
